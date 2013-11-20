@@ -1,0 +1,57 @@
+#!/usr/bin/perl -W
+
+########################################
+#
+#
+# collect proxy and mcs log file
+#
+#
+########################################
+
+use strict;
+use warnings;
+use Net::SCP::Expect;
+use Getopt::Long;
+use Net::OpenSSH;
+
+my $server = "10.6.244.41";
+my $proxy  = "10.6.244.42";
+
+GetOptions("server=s"	=>	\$server,
+           "proxy=s"	=>	\$proxy)
+or die("Error in command line arguments\n");
+
+sub printServerInfo() {
+    print "MCS : \$mcsHostname\n";
+    print "MCS ip: \$mcsIp\n";
+    print "MCS build: \$mcsBuild\n";
+}
+
+sub printProxyInfo() {
+    print "proxy : \$proxyHostname\n";
+    print "proxy ip: \$proxyIp\n";
+    print "proxy build : \$proxyBuild\ngoogle.com";
+}
+
+# Get last 3 log files from /usr/local/avamarclient/var folder
+sub getProxyLog() {
+    my $ssh1 = Net::OpenSSH->new("root\@$proxy",password => 'avam@r');
+	my @output = $ssh1->capture('ls -rt /usr/local/avamarclient/var/*.log | tail -n 3');
+	chomp(@output);
+	my $scpe = Net::SCP::Expect->new(host=>$server,user=>'root',password=>'avam@r');
+	$scpe->login('root','avam@r');
+	foreach my $logfile (@output) {
+	    $scpe->scp("root\@$proxy:$logfile");    
+	}	
+}
+
+sub getMcsLog() {	
+	my $scpe = Net::SCP::Expect->new(host=>$server, user=>'admin', password=>'AAbbccddee11!!');
+	$scpe->login('admin','AAbbccddee11!!');
+	$scpe->scp("admin\@$server:/usr/local/avamar/var/mc/server_log/mcserver.log.0",'mcslogfile');
+}
+
+printServerInfo();
+printProxyInfo();
+#getMcsLog();
+#getProxyLog();
